@@ -1,6 +1,7 @@
 package org.example.service;
 
 import org.example.model.Employee;
+import org.example.service.errors.EmployeeServiceException;
 
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
@@ -18,11 +19,14 @@ public interface EmployeeService {
             @WebParam(name = "minSalary") Double minSalary,
             @WebParam(name = "maxSalary") Double maxSalary,
             @WebParam(name = "department") String department
-    );
+    ) throws EmployeeServiceException;
 
-    int createEmployee(String firstName, String lastName, String position, double salary, String department);
+    @WebMethod
+    int createEmployee(String firstName, String lastName, String position, double salary, String department) throws EmployeeServiceException;
 
-    boolean updateEmployee(int id, String firstName, String lastName, String position, double salary, String department);
+    @WebMethod
+    boolean updateEmployee(int id, String firstName, String lastName, String position, double salary, String department) throws EmployeeServiceException;
 
-    boolean deleteEmployee(int id);
+    @WebMethod
+    boolean deleteEmployee(int id) throws EmployeeServiceException;
 }

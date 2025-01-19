@@ -16,7 +16,7 @@ public class StandalonePublisher {
         // Публикуем веб-сервис
         String url = "http://localhost:8080/web/ws/EmployeeService";
         try {
-            Endpoint.publish(url, new EmployeeServiceImpl(getDataSource().getConnection()));
+            Endpoint.publish(url, new EmployeeServiceImpl());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

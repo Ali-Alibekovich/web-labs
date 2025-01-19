@@ -11,9 +11,9 @@ public class DbProvider {
         if (dataSource == null) {
             PGSimpleDataSource ds = new PGSimpleDataSource();
 
-            ds.setUrl("jdbc:postgresql://localhost:5432/postgres");
-            ds.setUser("postgres");
-            ds.setPassword("postgres");
+            ds.setUrl("jdbc:postgresql://localhost:5432/studs");
+            ds.setUser("s285317");
+            ds.setPassword("");
 
             dataSource = ds;
         }

@@ -3,6 +3,7 @@ package org.example;
 import org.example.model.Employee;
 import org.example.service.EmployeeService;
 import org.example.service.EmployeeServiceImpl;
+import org.example.service.errors.EmployeeServiceException;
 
 import javax.xml.namespace.QName;
 import javax.xml.ws.Service;
@@ -27,56 +28,20 @@ public class DemoClient {
         // Получаем порт (прокси), который реализует интерфейс EmployeeService
         EmployeeService port = service.getPort(EmployeeService.class);
 
-        // все сотрудники
-        List<Employee> employeesExists = port.searchEmployees(null, null, null, null, null, null);
-        System.out.println("Найдено сотрудников после операции create: " + employeesExists.size());
-        for (Employee e : employeesExists) {
-            System.out.println(
-                    "ID: " + e.getId() +
-                            ", " + e.getFirstName() + " " + e.getLastName() +
-                            ", " + e.getPosition() +
-                            ", salary=" + e.getSalary() +
-                            ", dept=" + e.getDepartment()
-            );
+        try {
+            int newId = port.createEmployee("", "Doe", "Developer", 5000, "IT");
+            System.out.println("New employee ID: " + newId);
+        } catch (EmployeeServiceException e) {
+            System.out.println("Error during employee creation: " + e.getFaultInfo().getMessage());
         }
 
-        // создаем запись
-        port.createEmployee("Ali", "Chupanov", "DEVELOPER", 100000.0, "IT");
-        List<Employee> employees = port.searchEmployees("Ali", "Chupanov", "DEVELOPER", null,null, "IT");
-        System.out.println("Найдено сотрудников после операции create: " + employees.size());
-        for (Employee e : employees) {
-            System.out.println(
-                    "ID: " + e.getId() +
-                            ", " + e.getFirstName() + " " + e.getLastName() +
-                            ", " + e.getPosition() +
-                            ", salary=" + e.getSalary() +
-                            ", dept=" + e.getDepartment()
-            );
+        // Пример вызова метода удаления с ошибкой
+        try {
+            boolean deleted = port.deleteEmployee(999); // Неверный ID
+            System.out.println("Employee deleted: " + deleted);
+        } catch (EmployeeServiceException e) {
+            System.out.println("Error during employee deletion: " + e.getFaultInfo().getMessage());
         }
-
-        //удаляем запись
-        port.updateEmployee(employees.get(0).getId(), "Ali", "Chupanov", "DEVELOPER", 120000.0, "IT");
-        List<Employee> employeesAfterUpdate = port.searchEmployees("Ali", "Chupanov", "DEVELOPER", null,null, "IT");
-        System.out.println("Найдено сотрудников после операции update: " + employees.size());
-        for (Employee e : employeesAfterUpdate) {
-            System.out.println(
-                    "ID: " + e.getId() +
-                            ", " + e.getFirstName() + " " + e.getLastName() +
-                            ", " + e.getPosition() +
-                            ", salary=" + e.getSalary() +
-                            ", dept=" + e.getDepartment()
-            );
-        }
-
-
-        //удаляем запись
-        port.deleteEmployee(employees.get(0).getId());
-        int size =
-                port.searchEmployees("Ali", "Chupanov", "DEVELOPER", null,null, "IT").size();
-        //должно быть 0
-        System.out.println("Найдено сотрудников после операции delete: " + size);
-
-
 
     }
 }

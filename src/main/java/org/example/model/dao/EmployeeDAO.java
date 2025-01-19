@@ -134,4 +134,17 @@ public class EmployeeDAO {
             return rowsDeleted > 0;
         }
     }
+
+    public boolean employeeExists(int id) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM employees WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) <= 0;
+                }
+                return true;
+            }
+        }
+    }
 }
