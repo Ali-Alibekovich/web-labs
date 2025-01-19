@@ -17,16 +17,8 @@ import java.util.List;
  */
 public class DemoClient {
     public static void main(String[] args) throws Exception {
-        // Адрес WSDL того же сервиса, который мы опубликовали
-            URL wsdlURL = new URL("http://localhost:8080/web/ws/EmployeeService?wsdl");
+        URL wsdlURL = new URL("http://localhost:8080/web/ws/EmployeeService?wsdl");
 
-        // Параметры QName: targetNamespace (определяется исходя из пакета класса EmployeeServiceImpl)
-        // и имя сервиса (по умолчанию "<имя_класса>Service", если явно не указано @WebService(serviceName="...").
-        //
-        // В нашем случае targetNamespace будет "http://service.example.com/"
-        // -- он формируется из пакета "com.example.service" в обратном порядке: com.example.service -> http://service.example.com/
-        //
-        // Название сервиса по умолчанию: "EmployeeServiceImplService".
         QName qname = new QName("http://service.example.org/", "EmployeeServiceImplService");
 
         // Создаём сервис JAX-WS
@@ -35,12 +27,23 @@ public class DemoClient {
         // Получаем порт (прокси), который реализует интерфейс EmployeeService
         EmployeeService port = service.getPort(EmployeeService.class);
 
-        // Вызываем метод
-        // Пример: хотим найти всех Developers (position="Developer"), в отделе IT (department="IT"),
-        // без ограничений по зарплате
-        List<Employee> employees = port.searchEmployees(null, null, "Developer", null, null, "IT");
+        // все сотрудники
+        List<Employee> employeesExists = port.searchEmployees(null, null, null, null, null, null);
+        System.out.println("Найдено сотрудников после операции create: " + employeesExists.size());
+        for (Employee e : employeesExists) {
+            System.out.println(
+                    "ID: " + e.getId() +
+                            ", " + e.getFirstName() + " " + e.getLastName() +
+                            ", " + e.getPosition() +
+                            ", salary=" + e.getSalary() +
+                            ", dept=" + e.getDepartment()
+            );
+        }
 
-        System.out.println("Найдено сотрудников: " + employees.size());
+        // создаем запись
+        port.createEmployee("Ali", "Chupanov", "DEVELOPER", 100000.0, "IT");
+        List<Employee> employees = port.searchEmployees("Ali", "Chupanov", "DEVELOPER", null,null, "IT");
+        System.out.println("Найдено сотрудников после операции create: " + employees.size());
         for (Employee e : employees) {
             System.out.println(
                     "ID: " + e.getId() +
@@ -50,5 +53,30 @@ public class DemoClient {
                             ", dept=" + e.getDepartment()
             );
         }
+
+        //удаляем запись
+        port.updateEmployee(employees.get(0).getId(), "Ali", "Chupanov", "DEVELOPER", 120000.0, "IT");
+        List<Employee> employeesAfterUpdate = port.searchEmployees("Ali", "Chupanov", "DEVELOPER", null,null, "IT");
+        System.out.println("Найдено сотрудников после операции update: " + employees.size());
+        for (Employee e : employeesAfterUpdate) {
+            System.out.println(
+                    "ID: " + e.getId() +
+                            ", " + e.getFirstName() + " " + e.getLastName() +
+                            ", " + e.getPosition() +
+                            ", salary=" + e.getSalary() +
+                            ", dept=" + e.getDepartment()
+            );
+        }
+
+
+        //удаляем запись
+        port.deleteEmployee(employees.get(0).getId());
+        int size =
+                port.searchEmployees("Ali", "Chupanov", "DEVELOPER", null,null, "IT").size();
+        //должно быть 0
+        System.out.println("Найдено сотрудников после операции delete: " + size);
+
+
+
     }
 }

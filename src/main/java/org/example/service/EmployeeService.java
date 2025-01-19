@@ -19,4 +19,13 @@ public interface EmployeeService {
             @WebParam(name = "maxSalary") Double maxSalary,
             @WebParam(name = "department") String department
     );
+
+    @WebMethod
+    int createEmployee(String firstName, String lastName, String position, double salary, String department);
+
+    @WebMethod
+    boolean updateEmployee(int id, String firstName, String lastName, String position, double salary, String department);
+
+    @WebMethod
+    boolean deleteEmployee(int id);
 }
