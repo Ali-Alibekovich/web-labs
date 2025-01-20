@@ -1,13 +1,12 @@
 package org.example.service;
 
-import org.example.model.Employee;
 import javax.ws.rs.*;
-import java.util.List;
+import javax.ws.rs.core.Response;
 
 
 public interface EmployeeService {
     @GET
-    List<Employee> searchEmployees(
+    Response searchEmployees(
             @QueryParam(value = "firstName") String firstName,
             @QueryParam(value = "lastName") String lastName,
             @QueryParam(value = "position") String position,
@@ -17,7 +16,7 @@ public interface EmployeeService {
     );
 
     @POST
-    int createEmployee(
+    Response createEmployee(
             @QueryParam(value = "firstName") String firstName,
             @QueryParam(value = "lastName") String lastName,
             @QueryParam(value = "position") String position,
@@ -26,7 +25,7 @@ public interface EmployeeService {
     );
 
     @PUT
-    boolean updateEmployee(
+    Response updateEmployee(
             @QueryParam(value = "id") int id,
             @QueryParam(value = "firstName") String firstName,
             @QueryParam(value = "lastName") String lastName,
@@ -36,7 +35,7 @@ public interface EmployeeService {
     );
 
     @DELETE
-    boolean deleteEmployee(
+    Response deleteEmployee(
             @QueryParam(value = "id") int id
     );
 }

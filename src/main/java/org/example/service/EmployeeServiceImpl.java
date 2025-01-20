@@ -7,6 +7,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -46,50 +47,72 @@ public class EmployeeServiceImpl implements EmployeeService {
         dao = new EmployeeDAO(conn);
     }
 
-    @Override
-    public List<Employee> searchEmployees(String firstName,
-                                          String lastName,
-                                          String position,
-                                          Double minSalary,
-                                          Double maxSalary,
-                                          String department) {
 
+    @Override
+    public Response searchEmployees(String firstName,
+                                    String lastName,
+                                    String position,
+                                    Double minSalary,
+                                    Double maxSalary,
+                                    String department) {
         try {
-            return dao.searchEmployees(firstName, lastName, position, minSalary, maxSalary, department);
+            List<Employee> employees = dao.searchEmployees(firstName, lastName, position, minSalary, maxSalary, department);
+            return Response.status(Response.Status.OK).entity(employees).build();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error searching employee").build();
         }
     }
 
     @Override
-    public int createEmployee(String firstName, String lastName, String position, Double salary, String department) {
+    public Response createEmployee(String firstName, String lastName, String position, Double salary, String department) {
+        if (firstName == null || firstName.isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("First name cannot be null or empty").build();
+        }
+
         try {
             Employee employee = new Employee(0, firstName, lastName, position, salary, department);
-            return dao.createEmployee(employee);
+            dao.createEmployee(employee);
+
+            return Response.status(Response.Status.CREATED).entity("Employee created with id " + employee.getId()).build();
         } catch (Exception e) {
-            e.printStackTrace();
-            return -1;
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error creating employee").build();
         }
     }
 
     @Override
-    public boolean updateEmployee(int id, String firstName, String lastName, String position, Double salary, String department) {
+    public Response updateEmployee(int id, String firstName, String lastName, String position, Double salary, String department) {
         try {
+            if (dao.employeeExists(id)) {
+                return Response.status(Response.Status.NOT_FOUND).entity("Employee with id " + id + " not found").build();
+            }
+
             Employee employee = new Employee(id, firstName, lastName, position, salary, department);
-            return dao.updateEmployee(id, employee);
+            dao.updateEmployee(id, employee);
+
+            return Response.status(Response.Status.CREATED).entity("Employee updated with id " + employee.getId()).build();
         } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error updating employee").build();
         }
     }
 
     @Override
-    public boolean deleteEmployee(int id) {
+    public Response deleteEmployee(int id) {
         try {
-            return dao.deleteEmployee(id);
+            if (dao.employeeExists(id)) {
+                return Response.status(Response.Status.NOT_FOUND).entity("Employee with id " + id + " not found").build();
+            }
+            if (dao.deleteEmployee(id)) {
+                return Response.status(Response.Status.OK).entity("Employee deleted with id " + id).build();
+            } else {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity("Employee was not deleted").build();
+            }
         } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error deleting employee").build();
         }
     }
 }
