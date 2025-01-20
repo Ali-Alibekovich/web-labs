@@ -60,4 +60,36 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public int createEmployee(String firstName, String lastName, String position, Double salary, String department) {
+        try {
+            Employee employee = new Employee(0, firstName, lastName, position, salary, department);
+            return dao.createEmployee(employee);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    @Override
+    public boolean updateEmployee(int id, String firstName, String lastName, String position, Double salary, String department) {
+        try {
+            Employee employee = new Employee(id, firstName, lastName, position, salary, department);
+            return dao.updateEmployee(id, employee);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean deleteEmployee(int id) {
+        try {
+            return dao.deleteEmployee(id);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
