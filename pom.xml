@@ -33,6 +33,11 @@
             <artifactId>postgresql</artifactId>
             <version>42.2.23</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.juddi</groupId>
+            <artifactId>juddi-client</artifactId>
+            <version>3.3.10</version>
+        </dependency>
     </dependencies>
 
     <build>
