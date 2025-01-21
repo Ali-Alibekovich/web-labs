@@ -15,13 +15,15 @@ public interface EmployeeService {
             @QueryParam(value = "department") String department
     );
 
+
     @POST
     Response createEmployee(
             @QueryParam(value = "firstName") String firstName,
             @QueryParam(value = "lastName") String lastName,
             @QueryParam(value = "position") String position,
             @QueryParam(value = "salary") Double salary,
-            @QueryParam(value = "department") String department
+            @QueryParam(value = "department") String department,
+            @HeaderParam("Authorization") String authHeader
     );
 
     @PUT
@@ -31,11 +33,13 @@ public interface EmployeeService {
             @QueryParam(value = "lastName") String lastName,
             @QueryParam(value = "position") String position,
             @QueryParam(value = "salary") Double salary,
-            @QueryParam(value = "department") String department
+            @QueryParam(value = "department") String department,
+            @HeaderParam("Authorization") String authHeader
     );
 
     @DELETE
     Response deleteEmployee(
-            @QueryParam(value = "id") int id
+            @QueryParam(value = "id") int id,
+            @HeaderParam("Authorization") String authHeader
     );
 }

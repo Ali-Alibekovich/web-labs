@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Base64;
 import java.util.List;
 
 import static org.example.DbProvider.getDataSource;
@@ -24,6 +25,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     Connection conn;
 
     EmployeeDAO dao;
+
+    private static final String USERNAME = "admin";
+    private static final String PASSWORD = "password";
 
     public EmployeeServiceImpl() {
         try {
@@ -47,6 +51,22 @@ public class EmployeeServiceImpl implements EmployeeService {
         dao = new EmployeeDAO(conn);
     }
 
+    private boolean authenticate(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Basic ")) {
+            return false;
+        }
+        String base64Credentials = authHeader.substring("Basic ".length()).trim();
+        String credentials = new String(Base64.getDecoder().decode(base64Credentials));
+        String[] values = credentials.split(":", 2);
+        return values.length == 2 && USERNAME.equals(values[0]) && PASSWORD.equals(values[1]);
+    }
+
+    private Response unauthorized() {
+        return Response.status(Response.Status.UNAUTHORIZED)
+                .entity("User is not authorized.")
+                .build();
+    }
+
 
     @Override
     public Response searchEmployees(String firstName,
@@ -65,7 +85,11 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Response createEmployee(String firstName, String lastName, String position, Double salary, String department) {
+    public Response createEmployee(String firstName, String lastName, String position, Double salary, String department, String authHeader) {
+        if (!authenticate(authHeader)) {
+            return unauthorized();
+        }
+
         if (firstName == null || firstName.isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST).entity("First name cannot be null or empty").build();
         }
@@ -82,7 +106,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Response updateEmployee(int id, String firstName, String lastName, String position, Double salary, String department) {
+    public Response updateEmployee(int id, String firstName, String lastName, String position, Double salary, String department, String authHeader) {
+        if (!authenticate(authHeader)) {
+            return unauthorized();
+        }
         try {
             if (dao.employeeExists(id)) {
                 return Response.status(Response.Status.NOT_FOUND).entity("Employee with id " + id + " not found").build();
@@ -99,7 +126,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Response deleteEmployee(int id) {
+    public Response deleteEmployee(int id, String authHeader) {
+        if (!authenticate(authHeader)) {
+            return unauthorized();
+        }
         try {
             if (dao.employeeExists(id)) {
                 return Response.status(Response.Status.NOT_FOUND).entity("Employee with id " + id + " not found").build();
