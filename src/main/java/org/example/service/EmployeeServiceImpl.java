@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 import static org.example.DbProvider.getDataSource;
 
@@ -20,6 +21,8 @@ import static org.example.DbProvider.getDataSource;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class EmployeeServiceImpl implements EmployeeService {
+    private static final int MAX_CONCURRENT_REQUESTS = 5;
+    private static final Semaphore semaphore = new Semaphore(MAX_CONCURRENT_REQUESTS);
 
     Connection conn;
 
@@ -66,6 +69,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Response createEmployee(String firstName, String lastName, String position, Double salary, String department) {
+        if (!semaphore.tryAcquire()) {
+            return Response.status(Response.Status.TOO_MANY_REQUESTS)
+                    .entity("Too many requests. Please try again later.").build();
+        }
         if (firstName == null || firstName.isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST).entity("First name cannot be null or empty").build();
         }
@@ -78,11 +85,17 @@ public class EmployeeServiceImpl implements EmployeeService {
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Error creating employee").build();
+        } finally {
+            semaphore.release();
         }
     }
 
     @Override
     public Response updateEmployee(int id, String firstName, String lastName, String position, Double salary, String department) {
+        if (!semaphore.tryAcquire()) {
+            return Response.status(Response.Status.TOO_MANY_REQUESTS)
+                    .entity("Too many requests. Please try again later.").build();
+        }
         try {
             if (dao.employeeExists(id)) {
                 return Response.status(Response.Status.NOT_FOUND).entity("Employee with id " + id + " not found").build();
@@ -95,11 +108,17 @@ public class EmployeeServiceImpl implements EmployeeService {
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Error updating employee").build();
+        } finally {
+            semaphore.release();
         }
     }
 
     @Override
     public Response deleteEmployee(int id) {
+        if (!semaphore.tryAcquire()) {
+            return Response.status(Response.Status.TOO_MANY_REQUESTS)
+                    .entity("Too many requests. Please try again later.").build();
+        }
         try {
             if (dao.employeeExists(id)) {
                 return Response.status(Response.Status.NOT_FOUND).entity("Employee with id " + id + " not found").build();
@@ -113,6 +132,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Error deleting employee").build();
+        } finally {
+            semaphore.release();
         }
     }
 }
