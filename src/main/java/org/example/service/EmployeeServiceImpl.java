@@ -6,10 +6,15 @@ import org.example.model.dao.EmployeeDAO;
 import org.example.service.errors.EmployeeServiceException;
 import org.example.service.errors.ServiceFault;
 
+import javax.annotation.Resource;
 import javax.jws.WebService;
+import javax.xml.ws.WebServiceContext;
+import javax.xml.ws.handler.MessageContext;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 import static org.example.DbProvider.getDataSource;
 
@@ -18,11 +23,43 @@ import static org.example.DbProvider.getDataSource;
 )
 public class EmployeeServiceImpl implements EmployeeService {
 
+    private static final String USERNAME = "admin";
+    private static final String PASSWORD = "password";
+
+    @Resource
+    private WebServiceContext wsContext;
     private final EmployeeDAO employeeDAO;
 
     public EmployeeServiceImpl() throws SQLException {
         this.employeeDAO = new EmployeeDAO(getDataSource().getConnection());
     }
+
+
+    private void authenticate() throws EmployeeServiceException {
+        MessageContext msgContext = wsContext.getMessageContext();
+        Map<String, List<String>> headers = (Map<String, List<String>>) msgContext.get(MessageContext.HTTP_REQUEST_HEADERS);
+
+        if (headers == null || !headers.containsKey("Authorization")) {
+            throw new EmployeeServiceException("Missing Authorization header",
+                    ServiceFault.defaultInstance("Unauthorized"));
+        }
+
+        String authHeader = headers.get("Authorization").get(0);
+        if (authHeader == null || !authHeader.startsWith("Basic ")) {
+            throw new EmployeeServiceException("Invalid Authorization header",
+                    ServiceFault.defaultInstance("Unauthorized"));
+        }
+
+        String base64Credentials = authHeader.substring("Basic ".length()).trim();
+        String credentials = new String(Base64.getDecoder().decode(base64Credentials));
+        String[] values = credentials.split(":", 2);
+
+        if (values.length < 2 || !USERNAME.equals(values[0]) || !PASSWORD.equals(values[1])) {
+            throw new EmployeeServiceException("Invalid credentials",
+                    ServiceFault.defaultInstance("Unauthorized"));
+        }
+    }
+
 
     @Override
     public List<Employee> searchEmployees(String firstName, String lastName, String position, Double minSalary, Double maxSalary, String department) throws EmployeeServiceException {
@@ -39,6 +76,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public int createEmployee(String firstName, String lastName, String position, double salary, String department) throws EmployeeServiceException {
+        authenticate();
         if (firstName == null || firstName.isEmpty()) {
             throw new EmployeeServiceException(
                     "Invalid input data",
@@ -59,6 +97,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public boolean updateEmployee(int id, String firstName, String lastName, String position, double salary, String department) throws EmployeeServiceException {
+        authenticate();
         try {
             if (employeeDAO.employeeExists(id)) {
                 throw new EmployeeServiceException(
@@ -79,6 +118,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public boolean deleteEmployee(int id) throws EmployeeServiceException{
+        authenticate();
         try {
             if (employeeDAO.employeeExists(id)) {
                 throw new EmployeeServiceException(
